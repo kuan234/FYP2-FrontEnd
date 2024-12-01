@@ -1,0 +1,146 @@
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { useState, useRef, useEffect } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import axios from 'axios';
+
+export default function App() {
+  const [facing, setFacing] = useState('front');
+  const [faces, setFaces] = useState([]); // Store detected faces
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef(null);
+
+  // State to track if the camera is ready
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // Setup interval to send frames every second
+    let interval;
+    if (isReady) {
+      interval = setInterval(() => {
+        captureFrame();
+      }, 1000); // Send a frame every second
+    }
+
+    return () => clearInterval(interval); // Cleanup the interval when component unmounts or when isReady changes
+  }, [isReady]);
+
+  if (!permission) {
+    // Camera permissions are still loading.
+    return <View />;
+  }
+
+  if (!permission.granted) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={requestPermission} title="Grant Permission" />
+      </View>
+    );
+  }
+
+  // Capture the current frame without the need to press a button
+  const captureFrame = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
+      const { uri, width, height } = photo;
+
+      const formData = new FormData();
+      formData.append('image', {
+        uri,
+        name: 'frame.jpg',
+        type: 'image/jpeg',
+      });
+      formData.append('width', width.toString());
+      formData.append('height', height.toString());
+
+      try {
+        const response = await axios.post('http://192.168.0.105:8000/detect_face/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        console.log('Faces received:', response.data.faces);
+
+        if (response.data.face_detected) {
+          // Correct scaling of bounding boxes based on original dimensions
+          const scaledFaces = response.data.faces.map((face) => {
+            const { x, y, width, height } = face;
+
+            // Scale the bounding box to match the original camera size
+            return {
+              x: x,
+              y: y,
+              width: width,
+              height: height,
+            };
+          });
+
+          setFaces(scaledFaces); // Update state with scaled faces
+        } else {
+          alert('No face detected!');
+          setFaces([]); // Clear faces if none are detected
+        }
+      } catch (error) {
+        console.error('Error detecting face:', error);
+      }
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <CameraView
+        style={styles.camera}
+        facing={facing}
+        ref={cameraRef}
+        onCameraReady={() => setIsReady(true)} // Set the camera to ready when initialized
+      />
+      <View style={styles.overlay}>
+        {faces.length > 0 && faces.map((face, index) => (
+          <View
+            key={index}
+            style={[
+              styles.faceBox,
+              {
+                left: face.x,
+                top: face.y,
+                width: face.width,
+                height: face.height,
+              },
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
+  },
+  camera: {
+    flex: 1,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  faceBox: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: 'red',
+    backgroundColor: 'rgba(255, 0, 0, 0.3)',
+  },
+});
