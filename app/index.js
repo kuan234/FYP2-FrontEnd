@@ -4,7 +4,6 @@ import axios from 'axios';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // Import useRouter
 
-
 export default function Index() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -13,7 +12,6 @@ export default function Index() {
     const [modalVisible, setModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [userData, setUserData] = useState(null); // Store user data here
-
 
     // Initialize useRouter hook
     const router = useRouter();
@@ -32,10 +30,11 @@ export default function Index() {
                 // Store employee data on successful login
                 setModalVisible(false); // Close the modal on successful login
                 const { employee } = response.data;
-                const { name } = employee;                
+                const { id, name } = employee;  
+                setUserData({ id, name }); // Store user data in the state or pass it to context              
                 router.push({
                   pathname: '/(screens)/dashboard',
-                  params: { name },                
+                  params: { id: employee.id, name: employee.name },
                 });
             }
         } catch (error) {

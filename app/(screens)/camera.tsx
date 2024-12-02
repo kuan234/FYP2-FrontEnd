@@ -1,13 +1,22 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 
 export default function App() {
   const [facing, setFacing] = useState<CameraType>('front');
   const [faces, setFaces] = useState([]); // Store detected faces
   const [permission, requestPermission] = useCameraPermissions();
+  const [verificationResults, setVerificationResults] = useState(null); // Store API response
+  const [detectedImage, setDetectedImage] = useState(null); // Store detected faces image path
+
+
   const cameraRef = useRef(null);
+  const params = useLocalSearchParams();
+  const { id } = params; // Extract the `id` parameter
+
+  console.log('Received ID in Camera:', id);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -39,55 +48,77 @@ export default function App() {
       });
       formData.append('width', width.toString());
       formData.append('height', height.toString());
+      formData.append('user_id', id);  // Send user_id as part of the request
   
       try {
-        const response = await axios.post('http://192.168.0.105:8000/detect_face/', formData, {
+        const response = await axios.post('http://192.168.0.105:8000/verify_face/', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
   
-        console.log('Faces received:', response.data.faces);
-  
-        if (response.data.face_detected) {
-          // Correct scaling of bounding boxes based on original dimensions
-          const scaledFaces = response.data.faces.map((face) => {
-            const { x, y, width, height } = face;
-            
-            // Scale the bounding box to match the original camera size
-            return {
-              x: x,
-              y: y,
-              width: width,
-              height: height,
-            };
-          });
-  
-          setFaces(scaledFaces); // Update state with scaled faces
-        } else {
+        // console.log('Number of faces detected:', response.data.faces.length); // Log number of faces
+        const { verification_results, detected_image_path } = response.data;
+        const newDetectedImage = `http://192.168.0.105:8000/${detected_image_path}?t=${new Date().getTime()}`;
+
+        // Update state with verification results and detected image
+        setVerificationResults(verification_results);
+        setDetectedImage(newDetectedImage);
+        console.log(newDetectedImage);
+        } catch (error) {
           alert('No face detected!');
-          setFaces([]); // Clear faces if none are detected
-        }
-      } catch (error) {
-        console.error('Error detecting face:', error);
-      }
+}
     }
   };
+  
+  //       if (response.data.face_detected) {
+  //         alert(`Detected ${response.data.faces.length} face(s)!`);
+  //       } else {
+  //         alert('No face detected!');
+  //       }
+  //     } catch (error) {
+  //       console.error('Error detecting face:', error);
+  //     }
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={captureImage}>
-            <Text style={styles.text}>Capture</Text>
-          </TouchableOpacity>
-        </View>
-      </CameraView>
+      {!verificationResults ? (
+        <>
+          <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.button} onPress={captureImage}>
+                <Text style={styles.text}>Capture</Text>
+              </TouchableOpacity>
+            </View>
+          </CameraView>
+        </>
+      ) : (
+        <ScrollView contentContainerStyle={styles.resultsContainer}>
+          {detectedImage && (
+            <Image source={{ uri: detectedImage }} style={styles.detectedImage} />
+          )}
+          <Text style={styles.resultHeader}>Verification Results</Text>
+          {verificationResults.map((result, index) => (
+            <View key={index} style={styles.resultItem}>
+              <Text>Face {index + 1}:</Text>
+              <Text>Verified: {result.verified ? 'Yes' : 'No'}</Text>
+              <Text>Similarity: {(result.similarity * 100).toFixed(2)}%</Text>
+              <Text>Distance: {result.distance.toFixed(4)}</Text>
+            </View>
+          ))}
+          <Button
+            title="Capture Again"
+            onPress={() => {
+              setVerificationResults(null); // Reset results to retake photo
+            }}
+          />
+        </ScrollView>
+      )}
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -116,5 +147,28 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
+  },
+  resultsContainer: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  detectedImage: {
+    width: '100%',
+    height: 300,
+    resizeMode: 'contain',
+    marginBottom: 16,
+  },
+  resultHeader: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  resultItem: {
+    marginBottom: 16,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    width: '90%',
   },
 });

@@ -4,11 +4,17 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import icons
 
 export default function DashboardScreen() {
-  const { name } = useLocalSearchParams(); // Retrieve 'name' from route params
+  // Extract parameters passed via route
+  const params = useLocalSearchParams();
+  const { name, id } = params; // Get `name` and `id` from route params
+  console.log('Dashboard Params:', params); // Debug: Log received params
 
   const router = useRouter(); // Initialize the router
   const navigateToCamera = () => {
-    router.push('/(screens)/camera'); // Navigate to the camera screen
+    router.push({
+      pathname: '/(screens)/camera',
+      params: { id, name },
+    });//navigate to camera screen
   };
 
   return (
