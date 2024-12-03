@@ -16,6 +16,12 @@ export default function DashboardScreen() {
       params: { id, name },
     });//navigate to camera screen
   };
+  const navigateToUserList = () => {
+    router.push({
+      pathname: '/(screens)/userlist',
+      params: { id, name },
+    });//navigate to user screen
+  };
 
   return (
     <View style={styles.container}>
@@ -58,6 +64,16 @@ export default function DashboardScreen() {
             <MaterialCommunityIcons name="file-document" size={24} color="white" />
             <Text style={styles.buttonText}>Attendance History</Text>
             <Text style={styles.buttonDescription}>Click to view attendance log</Text>
+          </TouchableOpacity>
+
+          {/* User List Button */}
+          <TouchableOpacity 
+            style={[styles.button, styles.historyButton]} 
+            onPress={navigateToUserList} // Implement user list action later
+          >
+            <MaterialCommunityIcons name="account-multiple" size={24} color="white" />
+            <Text style={styles.buttonText}>User List </Text>
+            <Text style={styles.buttonDescription}>Click to view all user</Text>
           </TouchableOpacity>
         </View>
       </View>

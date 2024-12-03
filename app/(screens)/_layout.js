@@ -10,11 +10,9 @@ export default function Layout() {
   }, []);
   return (
     <Stack>
-      <Stack.Screen name="dashboard" options={{     headerStyle: {
-      backgroundColor: '#25292e',
-    },headerTintColor: '#fff',title:'dashboard', headerShown: false }} />
-
-    <Stack.Screen name="camera" options={{ title:'camera', headerShown: false }} />
+      <Stack.Screen name="dashboard" options={{title:'dashboard', headerShown: true }} />
+      <Stack.Screen name="camera" options={{ title:'camera', headerShown: false }} />
+      <Stack.Screen name="userlist" options={{ title:'User List', headerShown: true }} />
     </Stack>
   );
 }

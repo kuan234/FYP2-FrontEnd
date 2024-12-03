@@ -13,7 +13,7 @@ export default function Layout() {
       <Stack.Screen name="index" options={{     headerStyle: {
       backgroundColor: '#25292e',
     },headerTintColor: '#fff',title:'index', headerShown: false }} />
-      <Stack.Screen name="(screens)" options={{ headerShown: true, title: 'Home' }} />
+      <Stack.Screen name="(screens)" options={{ headerShown: false, title: 'Home' }} />
 
     </Stack>
   );
