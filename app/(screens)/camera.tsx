@@ -16,8 +16,6 @@ export default function App() {
   const params = useLocalSearchParams();
   const { id } = params; // Extract the `id` parameter
 
-  console.log('Received ID in Camera:', id);
-
   if (!permission) {
     // Camera permissions are still loading.
     return <View />;
@@ -70,23 +68,12 @@ export default function App() {
 }
     }
   };
-  
-  //       if (response.data.face_detected) {
-  //         alert(`Detected ${response.data.faces.length} face(s)!`);
-  //       } else {
-  //         alert('No face detected!');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error detecting face:', error);
-  //     }
-  //   }
-  // };
 
   return (
     <View style={styles.container}>
       {!verificationResults ? (
         <>
-          <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
+          <CameraView style={styles.camera} facing={facing} ref={cameraRef} animateShutter={false}>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.button} onPress={captureImage}>
                 <Text style={styles.text}>Capture</Text>
@@ -131,6 +118,10 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+    width: 350, // Set a fixed width
+    borderRadius: 150, // Make it circular (width/2)
+    overflow: 'hidden', // Ensure content stays within the circle
+    alignSelf: 'center', // Center the camera on the screen
   },
   buttonContainer: {
     flex: 1,
