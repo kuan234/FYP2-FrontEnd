@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
 
 const UserList = () => {
   const [users, setUsers] = useState([]); // Store the list of users
@@ -16,7 +17,7 @@ const UserList = () => {
 
   // Fetch users from the server (assuming a GET API is set up to retrieve users)
   useEffect(() => {
-    fetch('http://192.168.0.105:8000/get/')
+    fetch('http://10.193.1.102:8000/get/')
       .then((response) => response.json())
       .then((data) => setUsers(data))
       .catch((error) => {
@@ -54,7 +55,7 @@ const UserList = () => {
     });
 
     try {
-      const response = await axios.POST('http://192.168.0.105:8000/add/', formData, {
+      const response = await axios.post('http://10.193.1.102:8000/add/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -72,7 +73,7 @@ const UserList = () => {
         Alert.alert('Error', JSON.stringify(result.errors));
       }
     } catch (error) {
-      Alert.alert('Error', 'An error occurred while adding the employee.');
+      console.error('Error adding employee:', error);
     }
   };
 
@@ -82,7 +83,7 @@ const UserList = () => {
     if (!permissionResult.granted) {
       Alert.alert('Permission Denied', 'You need to allow access to your photos.');
       return;
-    }
+    } 
 
     const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],      
