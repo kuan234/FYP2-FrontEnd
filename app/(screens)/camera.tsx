@@ -10,6 +10,7 @@ export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
   const [verificationResults, setVerificationResults] = useState(null); // Store API response
   const [detectedImage, setDetectedImage] = useState(null); // Store detected faces image path
+  const serverIP = '192.168.0.105';
 
 
   const cameraRef = useRef(null);
@@ -49,7 +50,7 @@ export default function App() {
       formData.append('user_id', id);  // Send user_id as part of the request
   
       try {
-        const response = await axios.post('http://192.168.0.105:8000/verify_face/', formData, {
+        const response = await axios.post(`http://${serverIP}:8000/verify_face/`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -57,7 +58,7 @@ export default function App() {
   
         // console.log('Number of faces detected:', response.data.faces.length); // Log number of faces
         const { verification_results, detected_image_path } = response.data;
-        const newDetectedImage = `http://192.168.0.105:8000/${detected_image_path}?t=${new Date().getTime()}`;
+        const newDetectedImage = `http://${serverIP}:8000/${detected_image_path}?t=${new Date().getTime()}`;
 
         // Update state with verification results and detected image
         setVerificationResults(verification_results);

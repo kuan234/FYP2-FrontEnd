@@ -12,6 +12,7 @@ export default function Index() {
     const [modalVisible, setModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [userData, setUserData] = useState(null); // Store user data here
+    const serverIP = '192.168.0.105';
 
     // Initialize useRouter hook
     const router = useRouter();
@@ -19,7 +20,7 @@ export default function Index() {
     const signIn = async () => {
         setLoading(true);
         try {
-            const response = await axios.post('http://192.168.0.105:8000/login/', {
+            const response = await axios.post(`http://${serverIP}:8000/login/`, {
                 email: email,
                 password: password,
             });

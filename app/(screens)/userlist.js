@@ -15,10 +15,11 @@ const UserList = () => {
     department: '',
   });
   const [faceImage, setFaceImage] = useState(null); // Store the selected image
-
+  const serverIP = '192.168.0.105';
+  
   // Fetch users from the server (assuming a GET API is set up to retrieve users)
   useEffect(() => {
-    fetch('http://192.168.0.105:8000/get/')
+    fetch(`http://${serverIP}:8000/get/`)
       .then((response) => response.json())
       .then((data) => setUsers(data))
       .catch((error) => {
@@ -47,7 +48,7 @@ const UserList = () => {
     }
 
     try {
-      const response = await axios.post('http://192.168.0.105:8000/add/', data, {
+      const response = await axios.post(`http://${serverIP}:8000/add/`, data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
