@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 
 const AttendanceLog = () => {
@@ -18,14 +19,22 @@ const AttendanceLog = () => {
     const [selectedDate, setSelectedDate] = useState(getTodayDate());
     const [logData, setLogData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const params = useLocalSearchParams();
+    const { id } = params; // Extract the `id` parameter
     
   // Fetch attendance logs for the selected date
   const fetchLogs = async (date) => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://${serverIP}:8000/log?date=${date}`);
+        const response = await axios.get(`http://${serverIP}:8000/log`, {
+            params: {
+              date: date,     // Pass the date parameter
+              user_id: id // Pass the user_id parameter
+            }
+          });
       setLogData(response.data.logs || []);
     } catch (error) {
+        // console.error('Error fetching logs:', error);
       setLogData([]);
     } finally {
       setLoading(false);
@@ -42,7 +51,7 @@ const AttendanceLog = () => {
     <View style={styles.logRow}>
       <Text style={styles.logText}>Check-in: {item.check_in_time}</Text>
       <Text style={styles.logText}>Check-out: {item.check_out_time}</Text>
-      <Text style={styles.logText}>Total Hours: {item.total_hours} hrs</Text>
+      <Text style={styles.logText}>Total Hours: {item.total_hours} </Text>
     </View>
   );
 
