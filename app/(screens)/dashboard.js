@@ -15,10 +15,17 @@ export default function DashboardScreen() {
       pathname: '/(screens)/camera',
       params: { id, name },
     });//navigate to camera screen
+
   };
   const navigateToUserList = () => {
     router.push({
       pathname: '/(screens)/userlist',
+      params: { id, name },
+    });//navigate to user screen
+  };
+  const navigateToattendance = () => {
+    router.push({
+      pathname: '/(screens)/attendance',
       params: { id, name },
     });//navigate to user screen
   };
@@ -59,7 +66,7 @@ export default function DashboardScreen() {
           {/* Attendance History Button */}
           <TouchableOpacity 
             style={[styles.button, styles.historyButton]} 
-            onPress={() => {}} // Implement attendance history action later
+            onPress={navigateToattendance} // Implement attendance history action later
           >
             <MaterialCommunityIcons name="file-document" size={24} color="white" />
             <Text style={styles.buttonText}>Attendance History</Text>

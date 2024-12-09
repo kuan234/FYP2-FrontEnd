@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker'; // Import the Picker
 import axios from 'axios';
 
 const UserList = () => {
@@ -10,14 +11,14 @@ const UserList = () => {
     name: '',
     email: '',
     password: '',
-    role: '',
+    role: 'employee', // Default value for the dropdown
     department: '',
   });
   const [faceImage, setFaceImage] = useState(null); // Store the selected image
 
   // Fetch users from the server (assuming a GET API is set up to retrieve users)
   useEffect(() => {
-    fetch('http://10.193.1.102:8000/get/')
+    fetch('http://192.168.0.105:8000/get/')
       .then((response) => response.json())
       .then((data) => setUsers(data))
       .catch((error) => {
@@ -40,37 +41,26 @@ const UserList = () => {
     if (faceImage) {
       data.append('faceImage', {
         uri: faceImage.uri,
-        type: faceImage.type,
+        type: 'image/jpeg', // Ensure the correct type
         name: faceImage.uri.split('/').pop(),
       });
     }
-     // Log form data before sending
-    console.log('Form Data:', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        department: formData.department,
-        faceImage: faceImage ? faceImage.uri : null,
-    });
 
     try {
-      const response = await axios.post('http://10.193.1.102:8000/add/', formData, {
+      const response = await axios.post('http://192.168.0.105:8000/add/', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
+      if (response.status === 201) {
         Alert.alert('Success', 'Employee added successfully!');
         setModalVisible(false); // Close the modal
-        setFormData({ name: '', email: '', password: '', role: '', department: '' });
+        setFormData({ name: '', email: '', password: '', role: 'employee', department: '' }); // Reset form
         setFaceImage(null); // Reset the image
-        setUsers([...users, result.data]); // Add new user to the list
+        setUsers([...users, response.data]); // Add new user to the list
       } else {
-        Alert.alert('Error', JSON.stringify(result.errors));
+        Alert.alert('Error', 'Failed to add employee');
       }
     } catch (error) {
       console.error('Error adding employee:', error);
@@ -83,20 +73,20 @@ const UserList = () => {
     if (!permissionResult.granted) {
       Alert.alert('Permission Denied', 'You need to allow access to your photos.');
       return;
-    } 
+    }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],      
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
     });
 
     if (!result.canceled) {
       setFaceImage(result.assets[0]); // Save the selected image
-    }else {
-        alert('You did not select any image.');
-      }
+    } else {
+      Alert.alert('Error', 'You did not select any image.');
+    }
   };
 
   const renderItem = ({ item }) => (
@@ -146,12 +136,17 @@ const UserList = () => {
               onChangeText={(text) => handleInputChange('password', text)}
               secureTextEntry
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Role"
-              value={formData.role}
-              onChangeText={(text) => handleInputChange('role', text)}
-            />
+            <View style={styles.dropdownContainer}>
+              <Text style={styles.dropdownLabel}>Role:</Text>
+              <Picker
+                selectedValue={formData.role}
+                onValueChange={(value) => handleInputChange('role', value)}
+                style={styles.dropdown}
+              >
+                <Picker.Item label="Employee" value="employee" />
+                <Picker.Item label="Admin" value="admin" />
+              </Picker>
+            </View>
             <TextInput
               style={styles.input}
               placeholder="Department"
@@ -188,6 +183,7 @@ const UserList = () => {
   );
 };
 
+// Existing styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -282,6 +278,27 @@ const styles = StyleSheet.create({
   actionText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  dropdownContainer: {
+    width: '100%',
+    marginBottom: 15,
+  },
+  dropdownLabel: {
+    marginBottom: 5,
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdown: {
+    height: 50,
+    backgroundColor: '#f9f9f9',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 10,
+    justifyContent: 'center', // Align the text vertically
+  },
+  dropdownItem: {
+    fontSize: 16, // Adjust font size for better readability
+    color: '#333',
   },
 });
 
