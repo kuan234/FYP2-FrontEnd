@@ -1,5 +1,5 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect} from 'react';
 import { Button, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
@@ -16,6 +16,19 @@ export default function App() {
   const cameraRef = useRef(null);
   const params = useLocalSearchParams();
   const { id } = params; // Extract the `id` parameter
+  
+  const [isCapturing, setIsCapturing] = useState(false); // Flag to start/stop capturing frames
+  useEffect(() => {
+    // Setup interval to send frames every second
+    let interval;
+    if (isCapturing) {
+      interval = setInterval(() => {
+        captureImage();
+      }, 1000); // Send a frame every second
+    }
+
+    return () => clearInterval(interval); // Cleanup the interval when component unmounts or when isReady changes
+  }, [isCapturing]);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -74,7 +87,9 @@ export default function App() {
     <View style={styles.container}>
       {!verificationResults ? (
         <>
-          <CameraView style={styles.camera} facing={facing} ref={cameraRef} animateShutter={false}>
+          <CameraView style={styles.camera} facing={facing} ref={cameraRef} animateShutter={false} 
+                  onCameraReady={() => setIsCapturing(true)} // Set the camera to ready when initialized
+>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.button} onPress={captureImage}>
                 <Text style={styles.text}>Capture</Text>
