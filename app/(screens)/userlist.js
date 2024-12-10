@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Picker } from '@react-native-picker/picker'; // Import the Picker
+import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 
 const UserList = () => {
-  const [users, setUsers] = useState([]); // Store the list of users
-  const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
+  const [users, setUsers] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'employee', // Default value for the dropdown
+    role: 'employee',
     department: '',
   });
-  const [faceImage, setFaceImage] = useState(null); // Store the selected image
+  const [faceImage, setFaceImage] = useState(null);
+  const [croppedFace, setCroppedFace] = useState(null);
+  const [newcrop, setNewCrop] = useState(null);
+
   const serverIP = '192.168.0.105';
-  
-  // Fetch users from the server (assuming a GET API is set up to retrieve users)
+
   useEffect(() => {
     fetch(`http://${serverIP}:8000/get/`)
       .then((response) => response.json())
@@ -31,43 +33,6 @@ const UserList = () => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleAddEmployee = async () => {
-    const data = new FormData();
-    data.append('name', formData.name);
-    data.append('email', formData.email);
-    data.append('password', formData.password);
-    data.append('role', formData.role);
-    data.append('department', formData.department);
-
-    if (faceImage) {
-      data.append('faceImage', {
-        uri: faceImage.uri,
-        type: 'image/jpeg', // Ensure the correct type
-        name: faceImage.uri.split('/').pop(),
-      });
-    }
-
-    try {
-      const response = await axios.post(`http://${serverIP}:8000/add/`, data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.status === 201) {
-        Alert.alert('Success', 'Employee added successfully!');
-        setModalVisible(false); // Close the modal
-        setFormData({ name: '', email: '', password: '', role: 'employee', department: '' }); // Reset form
-        setFaceImage(null); // Reset the image
-        setUsers([...users, response.data]); // Add new user to the list
-      } else {
-        Alert.alert('Error', 'Failed to add employee');
-      }
-    } catch (error) {
-      console.error('Error adding employee:', error);
-    }
-  };
-
   const handleOpenImagePicker = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -78,15 +43,110 @@ const UserList = () => {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
+      allowsEditing: false,
       quality: 1,
     });
 
     if (!result.canceled) {
-      setFaceImage(result.assets[0]); // Save the selected image
+      setFaceImage(result.assets[0]);
+      handleDetectFace(result.assets[0]);
     } else {
       Alert.alert('Error', 'You did not select any image.');
+    }
+  };
+
+  const handleOpenCamera = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert('Permission Denied', 'You need to allow access to your camera.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setFaceImage(result.assets[0]);
+      handleDetectFace(result.assets[0]);
+    } else {
+      Alert.alert('Error', 'You did not capture any image.');
+    }
+  };
+
+  const handleDetectFace = async (image) => {
+    try {
+      const data = new FormData();
+      data.append('image', {
+        uri: image.uri,
+        type: 'image/jpeg',
+        name: image.uri.split('/').pop(),
+      });
+
+      const response = await axios.post(`http://${serverIP}:8000/detect_face/`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.face_detected) {
+        const annotated_image = response.data.annotated_image;
+        const newcrop = response.data.cropped_image;
+        console.log('[DEBUG] Face face: ',newcrop);
+        setNewCrop(`http://${serverIP}:8000/${newcrop}`);
+        setCroppedFace(`http://${serverIP}:8000/${annotated_image}?timestamp=${new Date().getTime()}`);
+      } else {
+        Alert.alert('No Face Detected', 'Please try another image.');
+        setCroppedFace(null);
+      }
+    } catch (error) {
+      console.error('Error detecting face:', error);
+      Alert.alert('Error', 'Failed to detect face.');
+    }
+  };
+
+  const handleAddEmployee = async () => {
+    console.log('[DEBUG] newCrop: ',newcrop);
+    if (!newcrop) {
+      Alert.alert('Error', 'Please upload a valid image with a face.');
+      return;
+    }
+
+    const data = new FormData();
+    data.append('name', formData.name);
+    data.append('email', formData.email);
+    data.append('password', formData.password);
+    data.append('role', formData.role);
+    data.append('department', formData.department);
+    
+    data.append('image', {
+      uri: newcrop,
+      type: 'image/jpeg', // Ensure the correct type
+      name: newcrop.split('/').pop(),
+    });    
+    console.log('[DEBUG] Form data being sent:', formData);
+
+    try {
+      const response = await axios.post(`http://${serverIP}:8000/add/`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (response.status === 201) {
+        Alert.alert('Success', 'Employee added successfully!');
+        setModalVisible(false);
+        setFormData({ name: '', email: '', password: '', role: 'employee', department: '' });
+        setFaceImage(null);
+        setCroppedFace(null);
+        setUsers([...users, response.data]);
+        setNewCrop(null);
+      } else {
+        Alert.alert('Error', 'Failed to add employee');
+      }
+    } catch (error) {
+      console.error('Error adding employee:', error);
+      Alert.alert('Error', 'Failed to add employee. Check the logs for details.');
     }
   };
 
@@ -103,7 +163,6 @@ const UserList = () => {
         <Text style={styles.addButtonText}>Add Employee</Text>
       </TouchableOpacity>
 
-      {/* User List */}
       <FlatList
         data={users}
         renderItem={renderItem}
@@ -111,7 +170,6 @@ const UserList = () => {
         ListEmptyComponent={<Text>No users available</Text>}
       />
 
-      {/* Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -155,13 +213,15 @@ const UserList = () => {
               onChangeText={(text) => handleInputChange('department', text)}
             />
 
-            {/* Image Picker */}
-            <TouchableOpacity style={styles.imageButton} onPress={handleOpenImagePicker}>
-              <Text style={styles.imageButtonText}>
-                {faceImage ? 'Change Image' : 'Upload Face Image'}
-              </Text>
-            </TouchableOpacity>
-            {faceImage && <Image source={{ uri: faceImage.uri }} style={styles.previewImage} />}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.imageButton} onPress={handleOpenImagePicker}>
+                <Text style={styles.imageButtonText}>Upload Image</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.imageButton} onPress={handleOpenCamera}>
+                <Text style={styles.imageButtonText}>Capture Image</Text>
+              </TouchableOpacity>
+            </View>
+            {croppedFace && <Image source={{ uri: croppedFace }} style={styles.previewImage} />}
 
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -300,6 +360,12 @@ const styles = StyleSheet.create({
   dropdownItem: {
     fontSize: 16, // Adjust font size for better readability
     color: '#333',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginVertical: 10,
   },
 });
 
