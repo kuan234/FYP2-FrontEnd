@@ -5,7 +5,7 @@ import { useEffect } from "react";
 export default function Layout() {
   useEffect(() => {
       setTimeout(() => {
-      setStatusBarStyle("dark");
+      setStatusBarStyle("light");
     }, 0);
   }, []);
   return (
