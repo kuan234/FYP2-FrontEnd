@@ -50,10 +50,15 @@ const AttendanceLog = () => {
   const renderLog = ({ item }) => (
     <View style={styles.logRow}>
       <Text style={styles.logText}>Check-in: {item.check_in_time}</Text>
-      <Text style={styles.logText}>Check-out: {item.check_out_time}</Text>
-      <Text style={styles.logText}>Total Hours: {item.total_hours} </Text>
+      <Text style={styles.logText}>
+        Check-out: {item.check_out_time}
+      </Text>
+      <Text style={styles.logText}>
+        Total Hours: {item.total_hours}
+      </Text>
     </View>
-  );
+  ); 
+  
 
   return (
     <View style={styles.container}>
