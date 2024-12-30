@@ -14,6 +14,7 @@ export default function Layout() {
       <Stack.Screen name="camera" options={{ title:'Verify...', headerShown: true }} />
       <Stack.Screen name="userlist" options={{ title:'User List', headerShown: true }} />
       <Stack.Screen name="attendance" options={{ title:'Attendance Log', headerShown: true }} />
+      <Stack.Screen name="updateTimes" options={{ title:'Update Times', headerShown: true }} />
     </Stack>
   );
 }
