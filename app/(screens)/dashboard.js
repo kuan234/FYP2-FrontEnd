@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import icons
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
@@ -57,6 +57,12 @@ export default function DashboardScreen() {
     });
   };
 
+  const handleLogout = () => {
+    // Perform any necessary cleanup or state reset here
+    Alert.alert('Logout', 'You have been logged out successfully.');
+    router.push('/'); // Navigate to login screen
+  };
+
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
@@ -97,7 +103,7 @@ export default function DashboardScreen() {
             </MenuTrigger>
             <MenuOptions customStyles={optionsStyles}>
               <MenuOption onSelect={navigateToEditProfile} text='Edit Profile' />
-              {/* Add more menu options here if needed */}
+              <MenuOption onSelect={handleLogout} text='Log Out' />
             </MenuOptions>
           </Menu>
         </View>
