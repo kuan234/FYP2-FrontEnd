@@ -14,6 +14,7 @@ export default function App() {
   const [attendanceInfo, setAttendanceInfo] = useState(null); // Store attendance info
   const [modalVisible, setModalVisible] = useState(false); // State for success modal visibility
   const [errorModalVisible, setErrorModalVisible] = useState(false); // State for error modal visibility
+  const [trueResultReceived, setTrueResultReceived] = useState(false); // Flag to track if a TRUE result has been received
   const serverIP = '192.168.0.105';
 
   const cameraRef = useRef(null);
@@ -27,19 +28,31 @@ export default function App() {
       params: { id, name },
     });//navigate to user screen
   };
-  
+
   const [isCapturing, setIsCapturing] = useState(false); // Flag to start/stop capturing frames
+  const [isProcessing, setIsProcessing] = useState(false); // Flag to indicate if an image is being processed
+  const [imageQueue, setImageQueue] = useState<FormData[]>([]); // Queue to store captured images
+
   useEffect(() => {
     // Setup interval to send frames every second
     let interval;
-    if (isCapturing) {
+    
+    if (isCapturing && !trueResultReceived) {
       interval = setInterval(() => {
-        captureImage();
-      }, 1800); // Send a frame every second
+        if (!isProcessing && !trueResultReceived) {
+          captureImage();
+        }
+      }, 1000); // Capture a frame every second
     }
+    return () => clearInterval(interval); // Cleanup the interval when component unmounts or when isCapturing changes
+  }, [isCapturing, isProcessing, trueResultReceived]);
 
-    return () => clearInterval(interval); // Cleanup the interval when component unmounts or when isReady changes
-  }, [isCapturing]);
+  useEffect(() => {
+    // Process the next image in the queue if not already processing
+    if (!isProcessing && imageQueue.length > 0 && !trueResultReceived) {
+      processImage(imageQueue.shift());
+    }
+  }, [imageQueue, isProcessing, trueResultReceived]);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -58,7 +71,8 @@ export default function App() {
 
   // Capture image
   const captureImage = async () => {
-    if (cameraRef.current) {
+    if (cameraRef.current && !trueResultReceived) {
+
       const photo = await cameraRef.current.takePictureAsync();
       const { uri, width, height } = photo;
   
@@ -71,39 +85,48 @@ export default function App() {
       formData.append('width', width.toString());
       formData.append('height', height.toString());
       formData.append('user_id', id);  // Correctly append employee_id
-  
-      try {
-        const response = await axios.post(`http://${serverIP}:8000/verify_face/`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-  
-        const { verification_results, detected_image_path, message, check_in_time, check_out_time } = response.data;
-        const newDetectedImage = `http://${serverIP}:8000/${detected_image_path}?t=${new Date().getTime()}`;
+      console.log(photo.uri);
 
-        // Update state with verification results and detected image
-        setVerificationResults(verification_results || []); // Ensure it's an array
-        setDetectedImage(newDetectedImage);
-        setAttendanceInfo({ message, check_in_time, check_out_time });
-        console.log(newDetectedImage);
+      // Add the captured image to the queue
+      setImageQueue(prevQueue => [...prevQueue, formData]);
+    }
+  };
 
-        // Check if any verification result is TRUE or if attendance is already logged
-        if ((verification_results && Array.isArray(verification_results) && verification_results.some(result => result.verified)) || message === 'Check-in successful' || message === 'Check-out successful') {
-          setIsCapturing(false); // Stop capturing frames
-          setModalVisible(true); // Show success modal
-        } else if (message === 'Attendance already logged for today') {
-          setIsCapturing(false); // Stop capturing frames
-          setModalVisible(true); // Show success modal
-        } else if (message.includes('Check-in is only allowed') || message.includes('Check-out is only allowed')) {
-          setIsCapturing(false); // Stop capturing frames
-          setErrorModalVisible(true); // Show error modal
-        }
-      } catch (error) {
-        console.error('No face detected!', error);
+  // Process image
+  const processImage = async (formData) => {
+    setIsProcessing(true);
+    try {
+      const response = await axios.post(`http://${serverIP}:8000/verify_face/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const { verification_results, detected_image_path, message, check_in_time, check_out_time } = response.data;
+      const newDetectedImage = `http://${serverIP}:8000/${detected_image_path}?t=${new Date().getTime()}`;
+
+      // Update state with verification results and detected image
+      setVerificationResults(verification_results || []); // Ensure it's an array
+      setDetectedImage(newDetectedImage);
+      setAttendanceInfo({ message, check_in_time, check_out_time });
+      console.log(newDetectedImage);
+      
+      // Check if any verification result is TRUE or if attendance is already logged
+      if ((verification_results && Array.isArray(verification_results) && verification_results.some(result => result.verified)) || message === 'Check-in successful' || message === 'Check-out successful') {
+        setIsCapturing(false); // Stop capturing frames
+        setModalVisible(true); // Show success modal
+        setTrueResultReceived(true); // Set the flag to indicate a TRUE result has been received
+      } else if (message === 'Attendance already logged for today') {
+        setIsCapturing(false); // Stop capturing frames
+        setModalVisible(true); // Show success modal
+      } else if (message.includes('Check-in is only allowed') || message.includes('Check-out is only allowed')) {
         setIsCapturing(false); // Stop capturing frames
         setErrorModalVisible(true); // Show error modal
       }
+    } catch (error) {
+      setIsCapturing(false); // Stop capturing frames
+    } finally {
+      setIsProcessing(false); // Reset processing flag
     }
   };
 
@@ -147,7 +170,7 @@ export default function App() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <MaterialCommunityIcons name="alert-circle" size={50} color="red" />
-            <Text style={styles.modalText}>Error: {attendanceInfo?.message || 'No face detected!'}</Text>
+            <Text style={styles.modalText}>Error: {attendanceInfo?.message}</Text>
             <Button
               title="Close"
               onPress={navigatetoDashboard}
