@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, ScrollView, Modal, TextInput, Button, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, ScrollView, Modal, TextInput, Button, Image } from 'react-native';
 import axios from 'axios';
 
 const EditProfileScreen = () => {
@@ -88,6 +87,7 @@ const EditProfileScreen = () => {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        params: { user_id: id },
       });
 
       if (response.data.face_detected) {
@@ -105,6 +105,7 @@ const EditProfileScreen = () => {
     }
   };
 
+
   const handleUploadFaceData = async () => {
     if (!newCrop) {
       Alert.alert('No Image', 'Please capture a new face image first.');
@@ -112,18 +113,11 @@ const EditProfileScreen = () => {
     }
 
     try {
-      // Resize the image to 360x360
-      const resizedImage = await ImageManipulator.manipulateAsync(
-        newCrop,
-        [{ resize: { width: 360, height: 360 } }],
-        { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
-      );
-
       const data = new FormData();
       data.append('faceImage', {
-        uri: resizedImage.uri,
+        uri: newCrop,
         type: 'image/jpeg',
-        name: resizedImage.uri.split('/').pop(),
+        name: newCrop.split('/').pop(),
       });
 
       const response = await axios.post(`http://${serverIP}:8000/update_face_image/`, data, {
@@ -133,16 +127,15 @@ const EditProfileScreen = () => {
         params: { user_id: id },
       });
 
-      if (response.data.success) {
-        alert('Face image updated successfully');
+      if (response.status === 200) {
+        Alert.alert('Success', 'Face image updated successfully.');
         setFaceModalVisible(false);
-        setProfileData({ ...profileData, faceImage: response.data.faceImage });
       } else {
-        alert(response.data.error || 'Failed to update face image');
+        Alert.alert('Error', 'Failed to update face image.');
       }
     } catch (error) {
-      console.error('Error updating face image:', error);
-      Alert.alert('Error', 'Failed to update face image.');
+      console.error('Error uploading face image:', error);
+      Alert.alert('Error', 'Failed to upload face image.');
     }
   };
 
@@ -230,7 +223,6 @@ const EditProfileScreen = () => {
         </View>
       </Modal>
 
-
       <Modal
         animationType="slide"
         transparent={true}
@@ -242,28 +234,21 @@ const EditProfileScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <Text style={styles.modalTitle}>Update Face Data</Text>
-            {croppedFace ? (
+            {croppedFace && (
               <Image
                 source={{ uri: croppedFace }}
                 style={styles.faceImage}
               />
-            ) : (
-              profileData.faceImage && (
-                <Image
-                  source={{ uri: `http://${serverIP}:8000/${profileData.faceImage}` }}
-                  style={styles.faceImage}
-                />
-              )
             )}
-            <TouchableOpacity style={styles.modalButton} onPress={handleOpenCamera}>
+            <TouchableOpacity style={[styles.modalButton, styles.captureButton]} onPress={handleOpenCamera}>
               <Text style={styles.modalButtonText}>Capture New Face Data</Text>
             </TouchableOpacity>
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.modalButton} onPress={() => setFaceModalVisible(false)}>
+              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setFaceModalVisible(false)}>
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalButton} onPress={handleUploadFaceData}>
-                <Text style={styles.modalButtonText}>Upload</Text>
+              <TouchableOpacity style={[styles.modalButton, styles.saveButton]} onPress={handleUploadFaceData}>
+                <Text style={styles.modalButtonText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -361,20 +346,39 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     width: '100%',
+    marginTop: 20,
   },
   modalButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginHorizontal: 5,
     flex: 1,
+    marginVertical: 10,
+    paddingVertical: 15, // Increase padding for better appearance
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center', // Center text vertically
+    minHeight: 50, // Ensure button doesn't shrink too much
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  captureButton: {
+    backgroundColor: '#007bff', // Blue color for the capture button
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545', // Red for cancel
+  },
+  saveButton: {
+    backgroundColor: '#28a745', // Green for save
   },
   modalButtonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 16, // Ensure text is legible
+    textAlign: 'center', // Center align the text
   },
   faceImage: {
     width: 200,
