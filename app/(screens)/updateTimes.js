@@ -56,6 +56,21 @@ export default function UpdateTimesScreen() {
       return;
     }
 
+    // Validate times
+    if (checkInEnd <= checkInStart) {
+      Alert.alert('Invalid Time', 'Check-in end time must be more than check-in start time.');
+      return;
+    }
+    if (checkOutEnd <= checkOutStart) {
+      Alert.alert('Invalid Time', 'Check-out end time must be more than check-out start time.');
+      return;
+    }
+
+    if (checkOutStart == checkInEnd) {
+      Alert.alert('Invalid Time', 'checkOutStart and checkInEnd cannot be the same.');
+      return;
+    }
+
     try {
       const response = await axios.post(`http://${serverIP}:8000/update_times/`, {
         check_in_start: checkInStart,
