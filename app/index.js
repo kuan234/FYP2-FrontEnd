@@ -61,6 +61,10 @@ export default function Index() {
         setPasswordVisible(!passwordVisible);
     };
 
+    const navigateToForgotPassword = () => {
+        router.push('/(screens)/forgotpassword');
+    };
+
     return (
         <View style={styles.container}>
             {/* Updated image path */}
@@ -99,6 +103,10 @@ export default function Index() {
                     <Text style={styles.buttonText}>Sign In</Text>
                 </TouchableOpacity>
             )}
+
+            <TouchableOpacity style={styles.forgotPasswordButton} onPress={navigateToForgotPassword}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
 
             {/* Modal for failed login */}
             <Modal
@@ -178,6 +186,15 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    forgotPasswordButton: {
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    forgotPasswordText: {
+        color: '#007bff',
+        fontSize: 16,
+        textDecorationLine: 'underline',
     },
     modalOverlay: {
         flex: 1,
