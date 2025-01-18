@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView,RefreshControl } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import icons
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
 import axios from 'axios';
+import { navigate } from 'expo-router/build/global-state/routing';
 
 export default function DashboardScreen() {
   const params = useLocalSearchParams();
-  const { name, id } = params; // Get `name` and `id` from route params
+  const { name, id, roles } = params; // Get `name` and `id` from route params
   console.log('Dashboard Params:', params); // Debug: Log received params
 
-  const [role, setRole] = useState('');
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [isCheckedOut, setIsCheckedOut] = useState(false);
+  const [checkInTime, setCheckInTime] = useState('N/A');
+  const [checkOutTime, setCheckOutTime] = useState('N/A');
+  const [totalHours, setTotalHours] = useState('N/A');
+  const [allowedCheckInStart, setAllowedCheckInStart] = useState('');
+  const [allowedCheckInEnd, setAllowedCheckInEnd] = useState('');
+  const [allowedCheckOutStart, setAllowedCheckOutStart] = useState('');
+  const [allowedCheckOutEnd, setAllowedCheckOutEnd] = useState('');
+  const [role, setRole] = useState(roles);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const serverIP = '10.193.27.46';
 
@@ -36,9 +45,8 @@ export default function DashboardScreen() {
   };
 
   const navigateToAttendance = () => {
-    const pathname = (role === 'admin' || role==='superadmin') ? '/(screens)/attendance_admin' : '/(screens)/attendance';
     router.push({
-      pathname,
+      pathname: '/(screens)/attendance_admin',
       params: { id, name },
     });
   };
@@ -62,175 +70,278 @@ export default function DashboardScreen() {
     router.push('/');
   };
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
+const fetchUserRole = async () => {
       try {
         const response = await axios.get(`http://${serverIP}:8000/get_user_role/${id}/`);
         if (response.data.role) {
           setRole(response.data.role);
-          console.log('User Role:', role); // Debug: Log received params
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
       }
     };
 
-    const fetchCheckInStatus = async () => {
-      try {
+  const fetchAllowedCheckInOutTime = async () => {
+          try {
+            const response = await axios.get(`http://${serverIP}:8000/get_times`);
+            if (response.data.check_in_start) {
+              setAllowedCheckInStart(response.data.check_in_start);
+            }
+            if (response.data.check_in_end) {
+              setAllowedCheckInEnd(response.data.check_in_end);
+            }
+            if (response.data.check_out_start) {
+              setAllowedCheckOutStart(response.data.check_out_start);
+            }
+            if (response.data.check_out_end) {
+              setAllowedCheckOutEnd(response.data.check_out_end);
+            }
+          } catch (error) {
+            console.error('Error fetching allowed check-in/out time:', error);
+          }
+        };
+
+  const fetchCheckInStatus = async () => {
+    try {
         const response = await axios.get(`http://${serverIP}:8000/get_check_in_status/${id}/`);
         if (response.data.checked_in !== undefined) {
           setIsCheckedIn(response.data.checked_in);
           setIsCheckedOut(response.data.checked_out);
+          }
+        } catch (error) {
+          console.error('Error fetching check-in status:', error);
         }
-      } catch (error) {
-        console.error('Error fetching check-in status:', error);
-      }
-    };
+      };
 
-    fetchUserRole();
-    fetchCheckInStatus();
-  }, [id]);
+const fetchAttendanceLog = async () => {
+        try {
+          const currentDate = getTodayDate();
+          const response = await axios.get(`http://${serverIP}:8000/log`, {
+            params: { date: currentDate, user_id: id },
+          });
+          if (response.data.logs && response.data.logs.length > 0) {
+            const log = response.data.logs[0];
+            setCheckInTime(log.check_in_time || 'N/A');
+            setCheckOutTime(log.check_out_time || 'N/A');
+            setTotalHours(log.total_hours || 'N/A'); 
+          } else {
+            setCheckInTime('N/A');
+            setCheckOutTime('N/A');
+            setTotalHours('N/A');
+          }
+        } catch (error) { 
+          setCheckInTime('N/A');
+          setCheckOutTime('N/A');
+          setTotalHours('N/A');
+        }
+      };
+
+      const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchAllowedCheckInOutTime();
+        await fetchCheckInStatus();
+        await fetchAttendanceLog();
+        await fetchUserRole();
+        setRefreshing(false);
+      };
+
+      const handleCheckInOut = () => {
+        navigateToCamera();
+      };
+
+
+  useEffect(() => {
+        fetchAllowedCheckInOutTime();
+        fetchCheckInStatus();
+        fetchAttendanceLog();
+        fetchUserRole();
+      }, [id]);
 
   return (
-    <MenuProvider>
-      <View style={styles.container}>
-        {/* Header */}
+<View style={styles.container}>
+        {/* Header Section */}
         <View style={styles.header}>
-          <Text style={styles.username}>{name ? name : 'Welcome!'}</Text>
-          <Menu>
-            <MenuTrigger>
-              <MaterialCommunityIcons name="menu" size={30} color="black" style={styles.menuIcon} />
-            </MenuTrigger>
-            <MenuOptions customStyles={optionsStyles}>
-              <MenuOption onSelect={navigateToEditProfile} text='Edit Profile' />
-              <MenuOption onSelect={handleLogout} text='Log Out' />
-            </MenuOptions>
-          </Menu>
+          <MaterialCommunityIcons name="account-tie" size={80} color="black" style={styles.profileImage} />
+          <Text style={styles.userName}> {name ? name.toUpperCase() : 'Welcome!'} </Text>
+          <Text style={styles.userDetails}>
+            Allowed Check-In: {allowedCheckInStart} - {allowedCheckInEnd} {'\n'}
+            Allowed Check-Out: {allowedCheckOutStart} - {allowedCheckOutEnd}
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.statusButton,
+              { backgroundColor: isCheckedIn && !isCheckedOut ? '#FF3B30' : '#4CAF50' },
+            ]}
+            onPress={handleCheckInOut}
+          >
+            <Text style={styles.statusButtonText}>
+            {isCheckedIn && !isCheckedOut ? 'Check Out' : 'Check In'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Main Content */}
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.cardContainer}>
-            {/* Check In/Out Card */}
-            <TouchableOpacity 
-              style={[styles.card, isCheckedIn && !isCheckedOut ? styles.checkOutCard : styles.checkInCard]} 
-              onPress={navigateToCamera}>
-              <MaterialCommunityIcons name={isCheckedIn && !isCheckedOut ? "exit-to-app" : "clock"} size={50} color="white" />
-              <Text style={styles.cardTitle}>{isCheckedIn && !isCheckedOut ? "Check Out" : "Check In"}</Text>
-              {/* <Text style={styles.cardDescription}>{isCheckedIn && !isCheckedOut ? "End your work day." : "Start your work day."}</Text> */}
-            </TouchableOpacity>
-
-            {/* Attendance History Card */}
-            <TouchableOpacity 
-              style={[styles.card, styles.attendanceCard]} 
-              onPress={navigateToAttendance}>
-              <MaterialCommunityIcons name="file-document" size={50} color="white" />
-              <Text style={styles.cardTitle}>Attendance History</Text>
-              {/* <Text style={styles.cardDescription}>View your attendance log.</Text> */}
-            </TouchableOpacity>
-
-            {/* Conditional Cards for Admin */}
-            {role !== 'employee' && (
-              <>
-                <TouchableOpacity 
-                  style={[styles.card, styles.userListCard]} 
-                  onPress={navigateToUserList}>
-                  <MaterialCommunityIcons name="account-multiple" size={50} color="white" />
-                  <Text style={styles.cardTitle}>User List</Text>
-                  {/* <Text style={styles.cardDescription}>Manage all users.</Text> */}
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={[styles.card, styles.updateTimesCard]} 
-                  onPress={navigateToUpdateTimes}>
-                  <MaterialCommunityIcons name="clock-edit" size={50} color="white" />
-                  <Text style={styles.cardTitle}>Update Times</Text>
-                  {/* <Text style={styles.cardDescription}>Edit check-in/out times.</Text> */}
-                </TouchableOpacity>
-              </>
-            )}
+        {/* Stats Cards */}
+        <ScrollView contentContainerStyle={styles.statsContainer} refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
+          <View style={styles.row}>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Check In</Text>
+              <Text style={styles.cardValue}>{checkInTime}</Text>
+              <Text style={styles.cardInfo}>on Time</Text>
+            </View>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Check Out</Text>
+              <Text style={styles.cardValue}>{checkOutTime}</Text>
+              <Text style={styles.cardInfo}>on Time</Text>
+            </View>
+          </View>
+          <View style={styles.row}>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Total Hours</Text>
+              <Text style={styles.cardValue}>{totalHours}</Text>
+            </View>
+          </View>
+          {/* Recent Activity */}
+          <View style={styles.recentActivity}>
+            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            <View style={styles.activityRow}>
+              <Text style={styles.activityText}>Check In</Text>
+              <Text style={styles.activityTime}>{checkInTime}</Text>
+            </View>
+            <View style={styles.activityRow}>
+              <Text style={styles.activityText}>Check Out</Text>
+              <Text style={styles.activityTime}>{checkOutTime}</Text>
+            </View>
           </View>
         </ScrollView>
+
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity 
+          onPress={() => router.push({
+                        pathname: '/(screens)/dashboard',
+                        params: { id, name, role },
+                    })}>
+            <MaterialCommunityIcons name="home" size={30} color="#007AFF" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToAttendance}>
+            <MaterialCommunityIcons name="calendar" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUserList}>
+            <MaterialCommunityIcons name="account-multiple" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUpdateTimes}>
+            <MaterialCommunityIcons name="clock-edit" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToEditProfile}>
+            <MaterialCommunityIcons name="account" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+        </View>
       </View>
-    </MenuProvider>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#F8F9FA',
   },
   header: {
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#F8F9FA',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 10,
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  userDetails: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center', // Center align the text
+  },
+  statusButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  statusButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+  statsContainer: {
+    padding: 20,
+  },
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#007AFF',
-  },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  menuIcon: {
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  scrollContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  cardContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    marginBottom: 20,
   },
   card: {
-    width: '45%',
-    aspectRatio: 1,
+    flex: 1,
+    marginHorizontal: 5,
+    padding: 15,
     borderRadius: 10,
-    marginBottom: 20,
-    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
     elevation: 2,
   },
-  checkInCard: {
-    backgroundColor: '#4CAF50',
-  },
-  checkOutCard: {
-    backgroundColor: '#f44336',
-  },
-  attendanceCard: {
-    backgroundColor: '#2196F3',
-  },
-  userListCard: {
-    backgroundColor: '#FF9800',
-  },
-  updateTimesCard: {
-    backgroundColor: '#9C27B0',
-  },
   cardTitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+  cardValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
-    marginTop: 10,
+    color: '#333',
   },
-  cardDescription: {
+  cardInfo: {
+    fontSize: 12,
+    color: '#9E9E9E',
+  },
+  recentActivity: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  activityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  activityText: {
     fontSize: 14,
-    color: 'white',
-    textAlign: 'center',
-    marginTop: 5,
+    color: '#666',
+  },
+  activityTime: {
+    fontSize: 14,
+    color: '#333',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
   },
 });
 
