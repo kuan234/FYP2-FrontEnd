@@ -18,7 +18,9 @@ const UserList = () => {
   const [croppedFace, setCroppedFace] = useState(null);
   const [newcrop, setNewCrop] = useState(null);
 
-  const serverIP = '192.168.0.105';
+  const serverIP = '10.193.27.46';
+  // const serverIP = '10.193.27.209';
+
 
   useEffect(() => {
     fetch(`http://${serverIP}:8000/get/`)

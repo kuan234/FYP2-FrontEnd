@@ -10,12 +10,19 @@ export default function Layout() {
   }, []);
   return (
     <Stack>
-      <Stack.Screen name="dashboard" options={{title:"Dashboard", headerTitleAlign:"center", headerShown: true, headerBackVisible:false }} />
+      <Stack.Screen name="dashboard" options={{title:"Dashboard", headerShown: false, headerBackVisible:false }} />
+      <Stack.Screen name="user_dashboard" options={{title:"Dashboard", headerShown: false, headerBackVisible:false }} />
       <Stack.Screen name="camera" options={{ title:'Verify...', headerShown: true }} />
       <Stack.Screen name="userlist" options={{ title:'User List', headerShown: true }} />
-      <Stack.Screen name="attendance" options={{ title:'Attendance Log', headerShown: true }} />
+      <Stack.Screen name="attendance" options={{ title:'Attendance Log', headerShown: false }} />
+      <Stack.Screen name="attendance_admin" options={{ title:'Attendance Log', headerShown: true }} />
+      <Stack.Screen name="monthly_attendance_admin" options={{ title:'Monthly Attendance', headerShown: true }} />
+      <Stack.Screen name="monthly_record_admin" options={{ title:'Monthly Record', headerShown: true }} />
       <Stack.Screen name="updateTimes" options={{ title:'Update Times', headerShown: true }} />
       <Stack.Screen name="forgotpassword" options={{ title:'Forgot Password', headerShown: true }} />
+      <Stack.Screen name="editprofile" options={{ title:'Edit Profile', headerShown: true }} />
+      <Stack.Screen name="user_editprofile" options={{ title:'Edit Profile', headerShown: false }} />
+
     </Stack>
   );
 }

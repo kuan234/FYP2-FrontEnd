@@ -16,7 +16,9 @@ export default function UpdateTimesScreen() {
   const [checkOutEndHour, setCheckOutEndHour] = useState('00');
   const [checkOutEndMinute, setCheckOutEndMinute] = useState('00');
   const router = useRouter();
-  const serverIP = '192.168.0.105'; // Replace with your server IP
+  const serverIP = '10.193.27.46'; 
+  // const serverIP = '10.193.27.209';
+
 
   useEffect(() => {
     const fetchTimes = async () => {

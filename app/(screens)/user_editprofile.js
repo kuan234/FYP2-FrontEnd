@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert, SafeAreaView, Activity
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 
-const EditProfileScreen = () => {
+const UserEditProfileScreen = () => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -20,6 +20,11 @@ const EditProfileScreen = () => {
   // const serverIP = '10.193.27.209';
 
   const router = useRouter();
+
+  const handleLogout = () => {
+        Alert.alert('Logout', 'You have been logged out successfully.');
+        router.replace('/');
+    };
 
   const navigateToDashboard = () => {
     const pathname = (role === 'admin' || role === 'superadmin') ? '/(screens)/dashboard' : '/(screens)/user_dashboard';
@@ -38,8 +43,8 @@ const EditProfileScreen = () => {
   };
 
   const navigateToEditProfile = () => {
-    router.push({
-      pathname: '/(screens)/editprofile',
+    router.replace({
+      pathname: '/(screens)/user_editprofile',
       params: { id, name },
     });
   };
@@ -186,13 +191,13 @@ const EditProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.header}>
-          <Text style={styles.username}>{profileData.name}</Text>
+          <Text style={styles.username}>{profileData.name.toUpperCase()}</Text>
         </View>
 
         <View style={styles.content}>
           <TouchableOpacity style={styles.item}>
             <Text style={styles.label}>Full Name</Text>
-            <Text style={styles.value}>{profileData.name}</Text>
+            <Text style={styles.value}>{profileData.name.toUpperCase()}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.item}>
@@ -214,7 +219,11 @@ const EditProfileScreen = () => {
           <TouchableOpacity style={styles.item} onPress={() => setFaceModalVisible(true)}>
             <Text style={styles.label}>Update Face Data</Text>
           </TouchableOpacity>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Log Out</Text>
+            </TouchableOpacity>
         </View>
+        
       </ScrollView>
 
       <Modal
@@ -281,11 +290,12 @@ const EditProfileScreen = () => {
           </View>
         </View>
       </Modal>
+      
 
     {/* Bottom Navigation */}
     <View style={styles.bottomNav}>
           <TouchableOpacity 
-          onPress={() => router.push({
+          onPress={() => router.replace({
                         pathname: '/(screens)/user_dashboard',
                         params: { id, name, role },
                     })}>
@@ -297,7 +307,7 @@ const EditProfileScreen = () => {
           <TouchableOpacity onPress={navigateToEditProfile}>
             <MaterialCommunityIcons name="account" size={30} color="#007AFF" />
           </TouchableOpacity>
-        </View>
+    </View>
     </SafeAreaView>
 
     
@@ -320,6 +330,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#343a40',
+    marginTop:20,
   },
   content: {
     flex: 1,
@@ -440,6 +451,19 @@ const styles = StyleSheet.create({
       borderTopColor: '#E0E0E0',
       backgroundColor: '#FFFFFF',
     },
+    logoutButton: {
+        marginTop: 20,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        backgroundColor: '#FF3B30',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      logoutButtonText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+      },
 });
 
-export default EditProfileScreen;
+export default UserEditProfileScreen;

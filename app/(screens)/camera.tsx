@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef, useEffect } from 'react';
-import { Button, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Modal } from 'react-native';
+import { Button, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Modal, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import icons
@@ -14,8 +14,11 @@ export default function App() {
   const [attendanceInfo, setAttendanceInfo] = useState(null); // Store attendance info
   const [modalVisible, setModalVisible] = useState(false); // State for success modal visibility
   const [errorModalVisible, setErrorModalVisible] = useState(false); // State for error modal visibility
+  const [spoofModalVisible, setSpoofModalVisible] = useState(false); // State for spoof modal visibility
   const [trueResultReceived, setTrueResultReceived] = useState(false); // Flag to track if a TRUE result has been received
-  const serverIP = '192.168.0.105';
+  const serverIP = '10.193.27.46';
+  // const serverIP = '10.193.27.209';
+
 
   const cameraRef = useRef(null);
   const params = useLocalSearchParams();
@@ -94,6 +97,8 @@ export default function App() {
 
   // Process image
   const processImage = async (formData) => {
+    // if (isProcessing) return;  // Prevent multiple submissions
+
     setIsProcessing(true);
     try {
       const response = await axios.post(`http://${serverIP}:8000/verify_face/`, formData, {
@@ -102,7 +107,7 @@ export default function App() {
         },
       });
 
-      const { verification_results, detected_image_path, message, check_in_time, check_out_time } = response.data;
+      const { verification_results, detected_image_path, message, check_in_time, check_out_time, } = response.data;
       const newDetectedImage = `http://${serverIP}:8000/${detected_image_path}?t=${new Date().getTime()}`;
 
       // Update state with verification results and detected image
@@ -122,6 +127,9 @@ export default function App() {
       } else if (message.includes('Check-in is only allowed') || message.includes('Check-out is only allowed')) {
         setIsCapturing(false); // Stop capturing frames
         setErrorModalVisible(true); // Show error modal
+      }else if (message.includes('Spoof Image Detected')) {
+        setIsCapturing(false); // Stop capturing frames
+        setSpoofModalVisible(true); // Show spoof modal
       }
     } catch (error) {
       setIsCapturing(false); // Stop capturing frames
@@ -153,7 +161,10 @@ export default function App() {
             <Text style={styles.modalText}>Check-Out Time: {attendanceInfo?.check_out_time || 'N/A'}</Text>
             <Button
               title="Close"
-              onPress={navigatetoDashboard}
+              onPress={() => {
+                setModalVisible(false); // First action
+                navigatetoDashboard();       // Second action
+              }}
             />
           </View>
         </View>
@@ -173,11 +184,39 @@ export default function App() {
             <Text style={styles.modalText}>Error: {attendanceInfo?.message}</Text>
             <Button
               title="Close"
-              onPress={navigatetoDashboard}
+              onPress={() => {
+                setErrorModalVisible(false); // First action
+                navigatetoDashboard();       // Second action
+              }}
             />
           </View>
         </View>
       </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={spoofModalVisible}
+        onRequestClose={() => {
+          setSpoofModalVisible(!spoofModalVisible);
+        }}
+      >
+        <View style={styles.spoofModalContainer}>
+          <View style={styles.spoofModalContent}>
+            <MaterialCommunityIcons name="alert-circle" size={50} color="red" />
+            <Text style={styles.spoofModalText}>Spoof Image Detected</Text>
+            <Button
+              title="Close"
+              onPress={() => {
+                setSpoofModalVisible(false);
+                navigatetoDashboard(); 
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
+
+
     </View>
   );
 }
@@ -280,5 +319,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  spoofModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  spoofModalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  spoofModalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: 'red',
   },
 });

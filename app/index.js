@@ -12,7 +12,9 @@ export default function Index() {
     const [modalVisible, setModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [userData, setUserData] = useState(null); // Store user data here
-    const serverIP = '192.168.0.105';
+    const serverIP = '10.193.27.46';
+    // const serverIP = '10.193.27.209';
+
 
     // Initialize useRouter hook
     const router = useRouter();
@@ -27,16 +29,27 @@ export default function Index() {
 
             // Check response status and handle accordingly
             if (response.status === 200) {
-                // Login successful, navigate to Dashboard
-                // Store employee data on successful login
+                // Login successful, navigate to appropriate dashboard
                 setModalVisible(false); // Close the modal on successful login
                 const { employee } = response.data;
-                const { id, name } = employee;  
-                setUserData({ id, name }); // Store user data in the state or pass it to context              
-                router.push({
-                  pathname: '/(screens)/dashboard',
-                  params: { id: employee.id, name: employee.name },
-                });
+                const { id, name, role } = employee;
+                setUserData({ id, name }); // Store user data in the state or pass it to context
+
+                // Navigate based on user role
+                if (role === 'employee') {
+                    router.replace({
+                        pathname: '/(screens)/user_dashboard',
+                        params: { id, name, role },
+                    });
+                    console.log(id,name,role);
+                } else {
+                    router.replace({
+                        pathname: '/(screens)/dashboard',
+                        params: { id, name, role },
+                    });
+                    console.log(id,name,role);
+
+                }
             }
         } catch (error) {
             if (error.response) {

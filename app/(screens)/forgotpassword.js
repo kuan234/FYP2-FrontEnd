@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, ActivityIndicator, StyleSheet } from 'react-native';
 import axios from 'axios';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [message, setMessage] = useState('');
-    const serverIP = '192.168.0.105';
+    const serverIP = '10.193.27.46';
+    const router = useRouter();
+
+    // const serverIP = '10.193.27.209';
+
 
     const handleForgotPassword = async () => {
         setLoading(true);
@@ -16,13 +22,17 @@ export default function ForgotPassword() {
             setMessage(response.data.message);
             setModalVisible(true);
         } catch (error) {
-            setMessage(error.response?.data?.error || 'An error occurred. Please try again.');
+            setMessage(error.response?.data?.error || 'Invalid Email Address.');
             setModalVisible(true);
         } finally {
             setLoading(false);
         }
     };
 
+    const handleCloseModal = () => {
+        setModalVisible(false);
+        router.replace('/'); // Navigate to the login screen
+    };
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Forgot Password</Text>
@@ -54,7 +64,7 @@ export default function ForgotPassword() {
                         <Text style={styles.modalText}>{message}</Text>
                         <TouchableOpacity
                             style={styles.modalButton}
-                            onPress={() => setModalVisible(false)}
+                            onPress={handleCloseModal}
                         >
                             <Text style={styles.modalButtonText}>Close</Text>
                         </TouchableOpacity>
