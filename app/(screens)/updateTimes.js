@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Button, Alert, TouchableOpacity, Dimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import icons
+
+const { width: screenWidth } = Dimensions.get('window');
 
 export default function UpdateTimesScreen() {
   const params = useLocalSearchParams();
@@ -18,6 +21,35 @@ export default function UpdateTimesScreen() {
   const router = useRouter();
   const serverIP = '10.193.27.46'; 
   // const serverIP = '10.193.27.209';
+
+  const navigateToUserList = () => {
+    router.push({
+      pathname: '/(screens)/userlist',
+      params: { id, name },
+    });
+  };
+
+  const navigateToAttendance = () => {
+    router.push({
+      pathname: '/(screens)/attendance_admin',
+      params: { id, name },
+    });
+  };
+
+  const navigateToEditProfile = () => {
+    router.push({
+      pathname: '/(screens)/editprofile',
+      params: { id, name },
+    });
+  };
+
+  const navigateToUpdateTimes = () => {
+    router.push({
+      pathname: '/(screens)/updateTimes',
+      params: { id, name },
+    });
+  };
+
 
 
   useEffect(() => {
@@ -184,6 +216,29 @@ export default function UpdateTimesScreen() {
           <Text style={styles.buttonText}>Update</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+          <TouchableOpacity 
+          onPress={() => router.replace({
+                        pathname: '/(screens)/dashboard',
+                        params: { id, name, role },
+                    })}>
+            <MaterialCommunityIcons name="home" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToAttendance}>
+            <MaterialCommunityIcons name="calendar" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUserList}>
+            <MaterialCommunityIcons name="account-multiple" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUpdateTimes}>
+            <MaterialCommunityIcons name="clock-edit" size={30} color="#007AFF" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToEditProfile}>
+            <MaterialCommunityIcons name="account" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+        </View>
     </View>
   );
 }
@@ -247,5 +302,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    width: screenWidth,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
   },
 });

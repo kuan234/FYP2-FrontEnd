@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Image, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -19,8 +23,7 @@ const UserList = () => {
   const [newcrop, setNewCrop] = useState(null);
 
   const serverIP = '10.193.27.46';
-  // const serverIP = '10.193.27.209';
-
+  const router = useRouter();
 
   useEffect(() => {
     fetch(`http://${serverIP}:8000/get/`)
@@ -96,7 +99,7 @@ const UserList = () => {
       if (response.data.face_detected) {
         const annotated_image = response.data.annotated_image;
         const newcrop = response.data.cropped_image;
-        console.log('[DEBUG] Face face: ',newcrop);
+        console.log('[DEBUG] Face face: ', newcrop);
         setNewCrop(`http://${serverIP}:8000/${newcrop}`);
         setCroppedFace(`http://${serverIP}:8000/${annotated_image}?timestamp=${new Date().getTime()}`);
       } else {
@@ -110,7 +113,7 @@ const UserList = () => {
   };
 
   const handleAddEmployee = async () => {
-    console.log('[DEBUG] newCrop: ',newcrop);
+    console.log('[DEBUG] newCrop: ', newcrop);
     if (!newcrop) {
       Alert.alert('Error', 'Please upload a valid image with a face.');
       return;
@@ -122,12 +125,12 @@ const UserList = () => {
     data.append('password', formData.password);
     data.append('role', formData.role);
     data.append('department', formData.department);
-    
+
     data.append('image', {
       uri: newcrop,
       type: 'image/jpeg', // Ensure the correct type
       name: newcrop.split('/').pop(),
-    });    
+    });
     console.log('[DEBUG] Form data being sent:', formData);
 
     try {
@@ -158,6 +161,35 @@ const UserList = () => {
       <Text style={styles.userName}>{item.role}</Text>
     </View>
   );
+
+  const params = useLocalSearchParams();
+  const { name, id, role } = params; // Get `name` and `id` from route params
+
+  const navigateToDashboard = () => {
+    router.push('/(screens)/dashboard');
+  };
+
+  const navigateToAttendance = () => {
+    router.push('/(screens)/attendance_admin');
+  };
+
+  const navigateToEditProfile = () => {
+    router.push('/(screens)/editprofile');
+  };
+
+  const navigateToUpdateTimes = () => {
+    router.push({
+      pathname: '/(screens)/updateTimes',
+      params: { id, name },
+    });
+  };
+
+  const navigateToUserList = () => {
+    router.push({
+      pathname: '/(screens)/userlist',
+      params: { id, name },
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -242,11 +274,33 @@ const UserList = () => {
           </View>
         </View>
       </Modal>
+
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity 
+          onPress={() => router.push({
+                        pathname: '/(screens)/dashboard',
+                        params: { id, name, role },
+                    })}>
+            <MaterialCommunityIcons name="home" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToAttendance}>
+            <MaterialCommunityIcons name="calendar" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUserList}>
+            <MaterialCommunityIcons name="account-multiple" size={30} color="#007AFF" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUpdateTimes}>
+            <MaterialCommunityIcons name="clock-edit" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToEditProfile}>
+            <MaterialCommunityIcons name="account" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+        </View>
     </View>
   );
 };
 
-// Existing styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -368,6 +422,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     width: '100%',
     marginVertical: 10,
+  },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    width: screenWidth,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
   },
 });
 

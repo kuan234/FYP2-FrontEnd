@@ -134,7 +134,7 @@ export default function DashboardScreen() {
             setCheckOutTime('N/A');
             setTotalHours('N/A');
           }
-        } catch (error) { 1
+        } catch (error) { 
           setCheckInTime('N/A');
           setCheckOutTime('N/A');
           setTotalHours('N/A');
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },

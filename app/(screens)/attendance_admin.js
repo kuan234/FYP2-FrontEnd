@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
+import { Dimensions, View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/Feather';  // Import icon
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const MonthlyAttendance = () => {
     const serverIP = '10.193.27.46';
@@ -13,6 +16,8 @@ const MonthlyAttendance = () => {
     const [logData, setLogData] = useState([]);
     const [searchQuery, setSearchQuery] = useState(''); // State to track the search input
     const router = useRouter();
+    const params = useLocalSearchParams();
+    const { name, id, role } = params; // Get `name` and `id` from route params
 
     // Helper to get today's date
     const getTodayDate = () => {
@@ -65,6 +70,33 @@ const MonthlyAttendance = () => {
             setLoading(false);
         }
     };
+    const navigateToUserList = () => {
+        router.push({
+          pathname: '/(screens)/userlist',
+          params: { id, name },
+        });
+      };
+    
+      const navigateToAttendance = () => {
+        router.push({
+          pathname: '/(screens)/attendance_admin',
+          params: { id, name },
+        });
+      };
+    
+      const navigateToEditProfile = () => {
+        router.push({
+          pathname: '/(screens)/editprofile',
+          params: { id, name },
+        });
+      };
+    
+      const navigateToUpdateTimes = () => {
+        router.push({
+          pathname: '/(screens)/updateTimes',
+          params: { id, name },
+        });
+      };
 
     // Fetch data on mount and when selected month/date changes
     useEffect(() => {
@@ -143,7 +175,7 @@ const MonthlyAttendance = () => {
                     style={[styles.tab, selectedTab === 'daily' && styles.activeTab]}
                     onPress={() => setSelectedTab('daily')}
                 >
-                    <Text style={[styles.tabText, selectedTab === 'daily' && styles.activeTabText]}>Daily</Text>
+                <Text style={[styles.tabText, selectedTab === 'daily' && styles.activeTabText]}>Daily</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.tab, selectedTab === 'monthly' && styles.activeTab]}
@@ -179,7 +211,7 @@ const MonthlyAttendance = () => {
                   ListFooterComponent={loading ? <ActivityIndicator size="large" color="blue" style={styles.loader} /> : null}
                   contentContainerStyle={styles.dailyContent}
               />
-          )}
+            )}
 
             {/* Monthly Tab Content */}
             {selectedTab === 'monthly' && (
@@ -197,6 +229,7 @@ const MonthlyAttendance = () => {
                             ))}
                         </Picker>
                     </View>
+
 
                     {/* Search Input */}
                     <TextInput
@@ -222,14 +255,37 @@ const MonthlyAttendance = () => {
                             />
                         )}
                     </View>
-                </View>
-            )}
+                 </View>
+              )}
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity 
+          onPress={() => router.push({
+                        pathname: '/(screens)/dashboard',
+                        params: { id, name, role },
+                    })}>
+            <MaterialCommunityIcons name="home" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToAttendance}>
+            <MaterialCommunityIcons name="calendar" size={30} color="#007AFF" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUserList}>
+            <MaterialCommunityIcons name="account-multiple" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUpdateTimes}>
+            <MaterialCommunityIcons name="clock-edit" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToEditProfile}>
+            <MaterialCommunityIcons name="account" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
         </View>
+      </View>
+  
     );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: 'white' },
+  container: { flex: 1, padding: 20, backgroundColor: '#f4f7fc' },
   tabContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
@@ -327,6 +383,17 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
     fontSize: 16,
+  },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    width: screenWidth,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
   },
 });
 

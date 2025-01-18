@@ -4,7 +4,6 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import icons
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
 import axios from 'axios';
-import { navigate } from 'expo-router/build/global-state/routing';
 
 export default function DashboardScreen() {
   const params = useLocalSearchParams();

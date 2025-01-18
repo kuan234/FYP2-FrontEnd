@@ -29,10 +29,16 @@ const EditProfileScreen = () => {
     });
   };
 
-  const navigateToAttendance = () => {
-    const pathname = (role === 'admin' || role === 'superadmin') ? '/(screens)/attendance_admin' : '/(screens)/attendance';
+  const navigateToUserList = () => {
     router.push({
-      pathname,
+      pathname: '/(screens)/userlist',
+      params: { id, name },
+    });
+  };
+
+  const navigateToAttendance = () => {
+    router.push({
+      pathname: '/(screens)/attendance_admin',
       params: { id, name },
     });
   };
@@ -42,6 +48,18 @@ const EditProfileScreen = () => {
       pathname: '/(screens)/editprofile',
       params: { id, name },
     });
+  };
+
+  const navigateToUpdateTimes = () => {
+    router.push({
+      pathname: '/(screens)/updateTimes',
+      params: { id, name },
+    });
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Logout', 'You have been logged out successfully.');
+    router.push('/');
   };
 
 
@@ -214,6 +232,9 @@ const EditProfileScreen = () => {
           <TouchableOpacity style={styles.item} onPress={() => setFaceModalVisible(true)}>
             <Text style={styles.label}>Update Face Data</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                      <Text style={styles.logoutButtonText}>Log Out</Text>
+                      </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -286,13 +307,19 @@ const EditProfileScreen = () => {
     <View style={styles.bottomNav}>
           <TouchableOpacity 
           onPress={() => router.push({
-                        pathname: '/(screens)/user_dashboard',
+                        pathname: '/(screens)/dashboard',
                         params: { id, name, role },
                     })}>
             <MaterialCommunityIcons name="home" size={30} color="#7F8C8D" />
           </TouchableOpacity>
           <TouchableOpacity onPress={navigateToAttendance}>
             <MaterialCommunityIcons name="calendar" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUserList}>
+            <MaterialCommunityIcons name="account-multiple" size={30} color="#7F8C8D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={navigateToUpdateTimes}>
+            <MaterialCommunityIcons name="clock-edit" size={30} color="#7F8C8D" />
           </TouchableOpacity>
           <TouchableOpacity onPress={navigateToEditProfile}>
             <MaterialCommunityIcons name="account" size={30} color="#007AFF" />
@@ -439,6 +466,19 @@ const styles = StyleSheet.create({
       borderTopWidth: 1,
       borderTopColor: '#E0E0E0',
       backgroundColor: '#FFFFFF',
+    },
+    logoutButton: {
+      marginTop: 20,
+      paddingVertical: 15,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+      backgroundColor: '#FF3B30',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoutButtonText: {
+      color: '#FFF',
+      fontWeight: 'bold',
     },
 });
 
