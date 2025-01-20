@@ -16,20 +16,27 @@ export default function App() {
   const [errorModalVisible, setErrorModalVisible] = useState(false); // State for error modal visibility
   const [spoofModalVisible, setSpoofModalVisible] = useState(false); // State for spoof modal visibility
   const [trueResultReceived, setTrueResultReceived] = useState(false); // Flag to track if a TRUE result has been received
-  const serverIP = '10.193.27.46';
+  const serverIP = '192.168.0.132';
   // const serverIP = '10.193.27.209';
 
 
   const cameraRef = useRef(null);
   const params = useLocalSearchParams();
-  const { id, name } = params; // Extract the `id` and `name` parameters
+  const { id, name, role } = params; // Extract the `id` and `name` parameters
   const router = useRouter(); // Initialize the router
 
   const navigatetoDashboard = () => {
-    router.push({
-      pathname: '/(screens)/dashboard',
-      params: { id, name },
-    });//navigate to user screen
+    if (role === 'employee') {
+      router.replace({
+        pathname: '/(screens)/user_dashboard',
+        params: { id, name, role },
+      });
+    } else {
+      router.replace({
+        pathname: '/(screens)/dashboard',
+        params: { id, name, role },
+      });
+    }
   };
 
   const [isCapturing, setIsCapturing] = useState(false); // Flag to start/stop capturing frames
@@ -45,7 +52,7 @@ export default function App() {
         if (!isProcessing && !trueResultReceived) {
           captureImage();
         }
-      }, 1000); // Capture a frame every second
+      }, 700); // Capture a frame every second
     }
     return () => clearInterval(interval); // Cleanup the interval when component unmounts or when isCapturing changes
   }, [isCapturing, isProcessing, trueResultReceived]);
@@ -76,7 +83,7 @@ export default function App() {
   const captureImage = async () => {
     if (cameraRef.current && !trueResultReceived) {
 
-      const photo = await cameraRef.current.takePictureAsync();
+      const photo = await cameraRef.current.takePictureAsync({quality:0.5});
       const { uri, width, height } = photo;
   
       const formData = new FormData();
