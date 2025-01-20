@@ -9,7 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const AttendanceLog = () => {
     const router = useRouter();
-    const serverIP = '10.193.27.46';
+    const serverIP = '192.168.0.132';
     const params = useLocalSearchParams();
     const { id, name, role } = params; 
 
@@ -57,24 +57,24 @@ const AttendanceLog = () => {
 
     const navigateToDashboard = () => {
         const pathname = (role === 'admin' || role === 'superadmin') ? '/(screens)/dashboard' : '/(screens)/user_dashboard';
-        router.push({
+        router.replace({
           pathname,
-          params: { id, name },
+          params: { id, name, role },
         });
       };
   
   const navigateToAttendance = () => {
         const pathname = (role === 'admin' || role === 'superadmin') ? '/(screens)/attendance_admin' : '/(screens)/attendance';
-        router.push({
+        router.replace({
           pathname,
-          params: { id, name },
+          params: { id, name, role },
         });
       };
   
       const navigateToEditProfile = () => {
-        router.push({
+        router.replace({
           pathname: '/(screens)/user_editprofile',
-          params: { id, name },
+          params: { id, name, role },
         });
       };
 
