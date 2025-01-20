@@ -22,7 +22,7 @@ export default function DashboardScreen() {
   const [role, setRole] = useState(roles);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
-  const serverIP = '10.193.27.46';
+  const serverIP = '192.168.0.132';
 
   const navigateToCamera = () => {
     if (!isCheckedIn) {
@@ -32,42 +32,50 @@ export default function DashboardScreen() {
     }
     router.push({
       pathname: '/(screens)/camera',
-      params: { id, name },
+      params: { id, name, roles },
     });
   };
 
   const navigateToUserList = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/userlist',
-      params: { id, name },
+      params: { id, name, roles },
     });
   };
 
   const navigateToAttendance = () => {
     router.push({
       pathname: '/(screens)/attendance_admin',
-      params: { id, name },
+      params: { id, name, roles },
     });
   };
 
   const navigateToEditProfile = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/editprofile',
-      params: { id, name },
+      params: { id, name, roles },
     });
   };
 
   const navigateToUpdateTimes = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/updateTimes',
-      params: { id, name },
+      params: { id, name, roles },
     });
   };
 
   const handleLogout = () => {
     Alert.alert('Logout', 'You have been logged out successfully.');
-    router.push('/');
+    router.replace('/');
   };
+
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 const fetchUserRole = async () => {
       try {
@@ -115,11 +123,13 @@ const fetchUserRole = async () => {
 const fetchAttendanceLog = async () => {
         try {
           const currentDate = getTodayDate();
+          console.log('Fetching logs for date:', currentDate, 'and user ID:', id);
           const response = await axios.get(`http://${serverIP}:8000/log`, {
             params: { date: currentDate, user_id: id },
           });
           if (response.data.logs && response.data.logs.length > 0) {
             const log = response.data.logs[0];
+            console.log('Attendance Log Response:', response.data);
             setCheckInTime(log.check_in_time || 'N/A');
             setCheckOutTime(log.check_out_time || 'N/A');
             setTotalHours(log.total_hours || 'N/A'); 
@@ -129,9 +139,10 @@ const fetchAttendanceLog = async () => {
             setTotalHours('N/A');
           }
         } catch (error) { 
-          setCheckInTime('N/A');
-          setCheckOutTime('N/A');
-          setTotalHours('N/A');
+          console.error('Error fetching attendance log:', error.response ? error.response.data : error.message);
+          setCheckInTime('Error');
+          setCheckOutTime('Error');
+          setTotalHours('Error');
         }
       };
 
@@ -218,7 +229,7 @@ const fetchAttendanceLog = async () => {
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
           <TouchableOpacity 
-          onPress={() => router.push({
+          onPress={() => router.replace({
                         pathname: '/(screens)/dashboard',
                         params: { id, name, role },
                     })}>

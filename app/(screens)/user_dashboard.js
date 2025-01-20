@@ -29,7 +29,7 @@ export default function DashboardScreen() {
     const [allowedCheckOutEnd, setAllowedCheckOutEnd] = useState('');
     const [role, setRole] = useState(roles);
     const [refreshing, setRefreshing] = useState(false);
-    const serverIP = '10.193.27.46';
+    const serverIP = '192.168.0.132';
     
     
     const getTodayDate = () => {
@@ -225,7 +225,7 @@ export default function DashboardScreen() {
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
           <TouchableOpacity 
-          onPress={() => router.push({
+          onPress={() => router.replace({
                         pathname: '/(screens)/user_dashboard',
                         params: { id, name, role },
                     })}>

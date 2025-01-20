@@ -9,7 +9,7 @@ export default function ForgotPassword() {
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [message, setMessage] = useState('');
-    const serverIP = '10.193.27.46';
+    const serverIP = '192.168.0.132';
     const router = useRouter();
 
     // const serverIP = '10.193.27.209';

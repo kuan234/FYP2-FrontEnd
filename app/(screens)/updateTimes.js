@@ -9,7 +9,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export default function UpdateTimesScreen() {
   const params = useLocalSearchParams();
-  const { id, name } = params; // Get `id` and `name` from route params
+  const { id, name, role } = params; // Get `id` and `name` from route params
   const [checkInStartHour, setCheckInStartHour] = useState('00');
   const [checkInStartMinute, setCheckInStartMinute] = useState('00');
   const [checkInEndHour, setCheckInEndHour] = useState('00');
@@ -19,34 +19,40 @@ export default function UpdateTimesScreen() {
   const [checkOutEndHour, setCheckOutEndHour] = useState('00');
   const [checkOutEndMinute, setCheckOutEndMinute] = useState('00');
   const router = useRouter();
-  const serverIP = '10.193.27.46'; 
-  // const serverIP = '10.193.27.209';
+  const serverIP = '192.168.0.132'; 
 
   const navigateToUserList = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/userlist',
-      params: { id, name },
+      params: { id, name, role },
+    });
+  };
+
+  const navigateToDashboard = () => {
+    router.replace({
+      pathname: '/(screens)/dashboard',
+      params: { id, name, role },
     });
   };
 
   const navigateToAttendance = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/attendance_admin',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const navigateToEditProfile = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/editprofile',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const navigateToUpdateTimes = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/updateTimes',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
@@ -100,6 +106,11 @@ export default function UpdateTimesScreen() {
       return;
     }
 
+    if (checkOutStart < checkInEnd) {
+      Alert.alert('Invalid Time', 'Check Out Must More Than Check In time.');
+      return;
+    }
+
     if (checkOutStart == checkInEnd) {
       Alert.alert('Invalid Time', 'checkOutStart and checkInEnd cannot be the same.');
       return;
@@ -114,7 +125,7 @@ export default function UpdateTimesScreen() {
       });
       if (response.data.success) {
         Alert.alert('Success', 'Check-in and check-out times updated successfully');
-        router.back(); // Navigate back to the previous screen
+        navigateToDashboard();
       } else {
         Alert.alert('Error', response.data.error || 'Failed to update times');
       }

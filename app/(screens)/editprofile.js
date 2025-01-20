@@ -16,50 +16,49 @@ const EditProfileScreen = () => {
   const [newCrop, setNewCrop] = useState(null);
   const params = useLocalSearchParams();
   const { id, name, role } = params; 
-  const serverIP = '10.193.27.46'; 
-  // const serverIP = '10.193.27.209';
+  const serverIP = '192.168.0.132'; 
 
   const router = useRouter();
 
   const navigateToDashboard = () => {
     const pathname = (role === 'admin' || role === 'superadmin') ? '/(screens)/dashboard' : '/(screens)/user_dashboard';
-    router.push({
+    router.replace({
       pathname,
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const navigateToUserList = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/userlist',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const navigateToAttendance = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/attendance_admin',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const navigateToEditProfile = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/editprofile',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const navigateToUpdateTimes = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/updateTimes',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const handleLogout = () => {
     Alert.alert('Logout', 'You have been logged out successfully.');
-    router.push('/');
+    router.replace('/');
   };
 
 
@@ -306,7 +305,7 @@ const EditProfileScreen = () => {
     {/* Bottom Navigation */}
     <View style={styles.bottomNav}>
           <TouchableOpacity 
-          onPress={() => router.push({
+          onPress={() => router.replace({
                         pathname: '/(screens)/dashboard',
                         params: { id, name, role },
                     })}>

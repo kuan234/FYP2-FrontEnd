@@ -22,7 +22,7 @@ const UserList = () => {
   const [croppedFace, setCroppedFace] = useState(null);
   const [newcrop, setNewCrop] = useState(null);
 
-  const serverIP = '10.193.27.46';
+  const serverIP = '192.168.0.132';
   const router = useRouter();
 
   useEffect(() => {
@@ -166,28 +166,34 @@ const UserList = () => {
   const { name, id, role } = params; // Get `name` and `id` from route params
 
   const navigateToDashboard = () => {
-    router.push('/(screens)/dashboard');
-  };
+    router.replace({
+      pathname: '/(screens)/dashboard',
+      params: { id, name, role },
+    });  };
 
   const navigateToAttendance = () => {
-    router.push('/(screens)/attendance_admin');
-  };
+    router.replace({
+      pathname: '/(screens)/attendance_admin',
+      params: { id, name, role },
+    });  };
 
   const navigateToEditProfile = () => {
-    router.push('/(screens)/editprofile');
-  };
+    router.replace({
+      pathname: '/(screens)/editprofile',
+      params: { id, name, role },
+    });  };
 
   const navigateToUpdateTimes = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/updateTimes',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
   const navigateToUserList = () => {
-    router.push({
+    router.replace({
       pathname: '/(screens)/userlist',
-      params: { id, name },
+      params: { id, name, role },
     });
   };
 
@@ -278,7 +284,7 @@ const UserList = () => {
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
           <TouchableOpacity 
-          onPress={() => router.push({
+          onPress={() => router.replace({
                         pathname: '/(screens)/dashboard',
                         params: { id, name, role },
                     })}>
