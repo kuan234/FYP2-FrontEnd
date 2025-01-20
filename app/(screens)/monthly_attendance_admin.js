@@ -6,10 +6,11 @@ import { useRouter } from 'expo-router';
 import { Calendar } from 'react-native-calendars';
 
 const MonthlyAttendance = () => {
-    const serverIP = '10.193.27.46';
+    const serverIP = '192.168.0.132';
     const [userData, setUserData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [logData, setLogData] = useState([]);
+    const [monthly, setMonthly] = useState([]);
     const router = useRouter();
     
     // Helper to get today's date
@@ -40,6 +41,7 @@ const MonthlyAttendance = () => {
                 params: { month: selectedMonth },
             });
             const users = [...new Map(response.data.logs.map(item => [item.user_id, item])).values()];
+            setMonthly(response.data.logs || []);
             setUserData(users || []);
         } catch (error) {
             setUserData([]);

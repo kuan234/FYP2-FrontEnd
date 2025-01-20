@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useLocalSearchParams } from 'expo-router';
 
 const UserMonthlyRecord = () => {
-    const serverIP = '10.193.27.46';
+    const serverIP = '192.168.0.132';
     const params = useLocalSearchParams();
     const { userId, userName, month } = params;
 
