@@ -12,9 +12,7 @@ export default function Index() {
     const [modalVisible, setModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [userData, setUserData] = useState(null); // Store user data here
-    const serverIP = '10.193.27.46';
-    // const serverIP = '10.193.27.209';
-
+    const serverIP = '192.168.0.132';
 
     // Initialize useRouter hook
     const router = useRouter();
