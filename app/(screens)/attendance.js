@@ -150,7 +150,7 @@ const AttendanceLog = () => {
                             data={logData}
                             renderItem={renderLog}
                             keyExtractor={(item, index) => index.toString()}
-                            ListEmptyComponent={<Text style={styles.noData}>No Data Available</Text>}
+                            ListEmptyComponent={<Text style={styles.noData}>No Attendance Record</Text>}
                         />
                     )}
                 </View>
@@ -174,7 +174,7 @@ const AttendanceLog = () => {
                             data={logData}
                             renderItem={renderMonthlyLog}
                             keyExtractor={(item, index) => index.toString()}
-                            ListEmptyComponent={<Text style={styles.noData}>No Data Available</Text>}
+                            ListEmptyComponent={<Text style={styles.noData}>No Attendance Record in this month.</Text>}
                         />
                     )}
                 </View>

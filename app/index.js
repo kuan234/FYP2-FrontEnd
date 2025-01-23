@@ -19,6 +19,11 @@ export default function Index() {
 
     const signIn = async () => {
         setLoading(true);
+        if (!email || !password) {
+            handleFailedLogin('Please enter your email and password.');
+            setLoading(false);
+            return;
+        }
         try {
             const response = await axios.post(`http://${serverIP}:8000/login/`, {
                 email: email,
@@ -55,7 +60,7 @@ export default function Index() {
                 if (error.response.status === 404) {
                     handleFailedLogin('User not found. Please check your email.');
                 } else {
-                    handleFailedLogin('An error occurred. Please try again.');
+                    handleFailedLogin('Invalid Email or Password. Please try again.');
                 }
             }
         } finally {

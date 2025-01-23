@@ -107,8 +107,7 @@ const UserList = () => {
         setCroppedFace(null);
       }
     } catch (error) {
-      console.error('Error detecting face:', error);
-      Alert.alert('Error', 'Failed to detect face.');
+      Alert.alert('Please select a Face Image.');
     }
   };
 
@@ -147,18 +146,48 @@ const UserList = () => {
         setUsers([...users, response.data]);
         setNewCrop(null);
       } else {
-        Alert.alert('Error', 'Failed to add employee');
+        Alert.alert('Error','Fill in all fields');
       }
     } catch (error) {
-      console.error('Error adding employee:', error);
-      Alert.alert('Error', 'Failed to add employee. Check the logs for details.');
+      Alert.alert('Error', 'Fill in all fields.');
     }
   };
+
+  const handleDeleteUser = async (userId) => {
+    try {
+      const response = await axios.delete(`http://${serverIP}:8000/delete_user/${userId}/`);
+      if (response.status === 200) {
+        Alert.alert('Success', 'User deleted successfully');
+        setUsers(users.filter(user => user.id !== userId));
+      } else {
+        Alert.alert('Error', 'Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      Alert.alert('Error', 'Failed to delete user.');
+    }
+  };
+
+  const confirmDeleteUser = (userId) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this user?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => handleDeleteUser(userId) },
+      ],
+      { cancelable: true }
+    );
+  };
+
 
   const renderItem = ({ item }) => (
     <View style={styles.userRow}>
       <Text style={styles.userName}>{item.name}</Text>
       <Text style={styles.userName}>{item.role}</Text>
+      <TouchableOpacity onPress={() => confirmDeleteUser(item.id)}>
+        <MaterialCommunityIcons name="delete" size={24} color="red" />
+      </TouchableOpacity>
     </View>
   );
 

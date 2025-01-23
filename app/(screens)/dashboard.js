@@ -21,6 +21,8 @@ export default function DashboardScreen() {
   const [allowedCheckOutEnd, setAllowedCheckOutEnd] = useState('');
   const [role, setRole] = useState(roles);
   const [refreshing, setRefreshing] = useState(false);
+  const [checkInCount, setCheckInCount] = useState(0);
+  const [checkOutCount, setCheckOutCount] = useState(0);
   const router = useRouter();
   const serverIP = '192.168.0.132';
 
@@ -139,10 +141,19 @@ const fetchAttendanceLog = async () => {
             setTotalHours('N/A');
           }
         } catch (error) { 
-          console.error('Error fetching attendance log:', error.response ? error.response.data : error.message);
-          setCheckInTime('Error');
-          setCheckOutTime('Error');
-          setTotalHours('Error');
+          setCheckInTime('N/A');
+          setCheckOutTime('N/A');
+          setTotalHours('N/A');
+        }
+      };
+
+      const fetchCheckInOutCounts = async () => {
+        try {
+          const response = await axios.get(`http://${serverIP}:8000/get_check_in_out_counts/`);
+          setCheckInCount(response.data.check_in_count);
+          setCheckOutCount(response.data.check_out_count);
+        } catch (error) {
+          console.error('Error fetching check-in/out counts:', error);
         }
       };
 
@@ -152,6 +163,7 @@ const fetchAttendanceLog = async () => {
         await fetchCheckInStatus();
         await fetchAttendanceLog();
         await fetchUserRole();
+        await fetchCheckInOutCounts();
         setRefreshing(false);
       };
 
@@ -165,6 +177,7 @@ const fetchAttendanceLog = async () => {
         fetchCheckInStatus();
         fetchAttendanceLog();
         fetchUserRole();
+        fetchCheckInOutCounts();
       }, [id]);
 
   return (
@@ -212,6 +225,19 @@ const fetchAttendanceLog = async () => {
               <Text style={styles.cardValue}>{totalHours}</Text>
             </View>
           </View>
+          {/* Check-In/Out Counts */}
+            <Text style={styles.sectionTitle}>Employee Activity</Text>
+          <View style={styles.row}>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Today's Check-Ins</Text>
+              <Text style={styles.cardValue}>{checkInCount}</Text>
+            </View>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Today's Check-Outs</Text>
+              <Text style={styles.cardValue}>{checkOutCount}</Text>
+            </View>
+          </View>
+        
           {/* Recent Activity */}
           <View style={styles.recentActivity}>
             <Text style={styles.sectionTitle}>Recent Activity</Text>
@@ -328,6 +354,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
+    marginTop: 10,
     color: '#333',
   },
   activityRow: {
